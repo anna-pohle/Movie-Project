@@ -1,6 +1,7 @@
 import random
-import movie_storage
+import movie_storage_sql as movie_storage
 from sys import exit
+
 
 print(f"{20 * '*'} My Movies Database {20 * '*'}")  # display title of application
 
@@ -51,41 +52,42 @@ def user_choice(movies_inventory):
             print("Bye!")
             exit(0)
         elif user_choice_input == "1":
-            list_movies(movies_inventory)
+            list_movies()
         elif user_choice_input == "2":
-            add_movie(movies_inventory)
+            add_movie()
         elif user_choice_input == "3":
-            delete_movie(movies_inventory)
+            delete_movie()
         elif user_choice_input == "4":
-            update_movie(movies_inventory)
+            update_movie()
         elif user_choice_input == "5":
-            stats(movies_inventory)
+            stats()
         elif user_choice_input == "6":
-            random_movie(movies_inventory)
+            random_movie()
         elif user_choice_input == "7":
-            search_movie(movies_inventory)
+            search_movie()
         elif user_choice_input == "8":
-            movies_sorted_by_rating(movies_inventory)
+            movies_sorted_by_rating()
         elif user_choice_input == "m":
             display_menu(menu_options)
         else:
             print("invalid input")
 
 
-def list_movies(movies_inventory):
+def list_movies():
     """
     Option 1
     Print all the movies, along with their rating.
     In addition, the command prints how many movies there are in total in the database.
     """
-    print(f"{len(movies_inventory)} movies in total.")
-    print("")
-    for film, info in movies_inventory.items():
-        print(f"{film}: {info['rating']}, {info['year']}")
-    print("")
+    movies = movie_storage.get_movies()
+    print(f"{len(movies)} movies in total")
+    for movie, data in movies.items():
+        print(f"{movie} ({data['year']}): {data['rating']}")
 
 
-def add_movie(movies_inventory):
+
+def add_movie():
+    movies_inventory = movie_storage.get_movies()
     """
     Option 2
     Ask the user to enter a movie name and a rating.
@@ -130,26 +132,27 @@ def add_movie(movies_inventory):
             print("The year must be a number.")
             print("")
             continue
-    movies_inventory[new_title] = {"rating": new_title_rating, "year": new_title_year}
-    movie_storage.add_movie(movies_inventory)
+    #{new_title: {"rating": new_title_rating, "year": new_title_year}}
+    movie_storage.add_movie(new_title, new_title_year, new_title_rating)
 
     print(f"Successfully added the film '{new_title}' from the year {new_title_year}",
           f"with a rating of {new_title_rating} to the list.")
     print("")
 
 
-def delete_movie(movies_inventory):
+def delete_movie():
     """
     Option 3
     Ask the user to enter a movie name, and delete it.
     If the movie doesn’t exist in the database, print an error message.
     """
+    movies_inventory = movie_storage.get_movies()
     delete_movie_name = input(
         "Please enter the name of the movie you want to delete: ")
     while True:
         if delete_movie_name in movies_inventory.keys():
             del movies_inventory[delete_movie_name]
-            movie_storage.delete_movie(movies_inventory)
+            movie_storage.delete_movie(delete_movie_name)
             print(f"The chosen movie {delete_movie_name} was successfully removed.")
             print("")
             break
@@ -158,7 +161,7 @@ def delete_movie(movies_inventory):
             continue
 
 
-def update_movie(movies_inventory):
+def update_movie():
     """
     Option 4
     Ask the user to enter a movie name, and then check if it exists.
@@ -167,6 +170,7 @@ def update_movie(movies_inventory):
     and update the movie’s rating in the database.
     There is no need to validate the input.
     """
+    movies_inventory = movie_storage.get_movies()
     update_movie_name = input("Please enter the name of the movie you want to update: ")
     if update_movie_name not in movies_inventory.keys():
         print(f"The movie '{update_movie_name}' is not in the database.")
@@ -184,12 +188,12 @@ def update_movie(movies_inventory):
                 print("The rating must be a number.")
                 print("")
                 continue
-        movies_inventory[update_movie_name]["rating"] = update_movie_rating
-        movie_storage.update_movie(movies_inventory)
+        #movies_inventory[update_movie_name]["rating"] = update_movie_rating
+        movie_storage.update_movie(update_movie_name, update_movie_rating)
         print(f"The chosen movie {update_movie_name} was successfully updated to rating {update_movie_rating}.")
 
 
-def stats(movies_inventory):
+def stats():
     """
     Option 5
     print statistics about movies in the database:
@@ -198,6 +202,7 @@ def stats(movies_inventory):
     3: best movie
     4: worst movie
     """
+    movies_inventory = movie_storage.get_movies()
     ratings = []
     for film, info in movies_inventory.items():
         ratings.append(info["rating"])
@@ -268,20 +273,21 @@ def get_worst_movie_by_rating(movies_inventory, ratings):
     return worst_movie_s
 
 
-def random_movie(movies_inventory):
+def random_movie():
     """
     Option 6
     Display random movie
     from the list of all items in dict, choose a random one.
     print random movie and its rating.
     """
+    movies_inventory = movie_storage.get_movies()
     movie, rating = random.choice(list(movies_inventory.items()))
     print("Your randomly chosen movie is:")
     print(movie, rating)
     print("")
 
 
-def search_movie(movies_inventory):
+def search_movie():
     """
     Option 7
     Ask the user to enter a movie name, and then check if it exists.
@@ -290,6 +296,7 @@ def search_movie(movies_inventory):
     and update the movie’s rating in the database.
     There is no need to validate the input.
     """
+    movies_inventory = movie_storage.get_movies()
     user_looking_for = input("Please enter (a part of) the movie you are looking for: ")
     user_looking_for = user_looking_for.lower()
     for movie, rating in movies_inventory.items():
@@ -307,12 +314,13 @@ def get_value(item):
     return item[1]["rating"]
 
 
-def movies_sorted_by_rating(movies_inventory):
+def movies_sorted_by_rating():
     """
     Option 8
     Print all the movies and their ratings, in a descending order by the rating.
     (best movie first and the worst movie last.)
     """
+    movies_inventory = movie_storage.get_movies()
     movies_list_sorted = sorted(movies_inventory.items(), key=get_value, reverse=True)
     print("")
     print("All movies in the database, from best to worst:")
