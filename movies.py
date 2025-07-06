@@ -80,20 +80,21 @@ def list_movies():
     In addition, the command prints how many movies there are in total in the database.
     """
     movies = movie_storage.get_movies()
-    print(f"{len(movies)} movies in total")
+    print(f"{len(movies)} movies in total:")
+    print("")
     for movie, data in movies.items():
         print(f"{movie} ({data['year']}): {data['rating']}")
-
+    print("")
 
 
 def add_movie():
-    movies_inventory = movie_storage.get_movies()
     """
     Option 2
     Ask the user to enter a movie name and a rating.
     There is no need to validate the input
     (assume that the rating is a number between 1-10).
     """
+    movies_inventory = movie_storage.get_movies()
     while True:
         new_title = input("Please enter the name of the movie you want to add: ")
         if len(new_title) == 0:
@@ -106,38 +107,15 @@ def add_movie():
             return None
         else:
             break
-    while True:
-        rating_input = (input("Please enter the rating of the movie you want to add: "))
-        try:
-            new_title_rating = float(rating_input)
-            if not 0 <= new_title_rating <= 10:
-                print("Please enter a positive number between 1 and 10.")
-                continue
-            else:
-                break
-        except ValueError:
-            print("The rating must be a number.")
-            print("")
-            continue
-    while True:
-        year_input = (input("Please enter the publishing year of the movie you want to add: "))
-        try:
-            new_title_year = int(year_input)
-            if not 1800 <= new_title_year <= 2025:
-                print("Please enter a year between 1800 and 2025.")
-                continue
-            else:
-                break
-        except ValueError:
-            print("The year must be a number.")
-            print("")
-            continue
-    #{new_title: {"rating": new_title_rating, "year": new_title_year}}
-    movie_storage.add_movie(new_title, new_title_year, new_title_rating)
 
-    print(f"Successfully added the film '{new_title}' from the year {new_title_year}",
-          f"with a rating of {new_title_rating} to the list.")
-    print("")
+    new_movie_data = movie_storage.fetch_movie_data(new_title)
+    if new_movie_data == None:
+        print(f"Could not add {new_title} to the database.")
+        print("")
+    else:
+        movie_storage.add_movie(**new_movie_data)
+        print(f"Successfully added the film '{new_title}' to the list.")
+        print("")
 
 
 def delete_movie():

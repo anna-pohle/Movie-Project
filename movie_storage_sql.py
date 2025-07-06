@@ -1,4 +1,5 @@
 from sqlalchemy import create_engine, text
+import requests
 
 # Define the database URL
 DB_URL = "sqlite:///movies.db"
@@ -18,6 +19,7 @@ with engine.connect() as connection:
     """))
     connection.commit()
 
+
 def get_movies():
     """Retrieve all movies from the database."""
     with engine.connect() as connection:
@@ -26,7 +28,8 @@ def get_movies():
 
     return {row[0]: {"year": row[1], "rating": row[2]} for row in movies}
 
-def add_movie(title, year, rating):
+
+def add_movie(title, year, rating, poster):
     """Add a new movie to the database."""
     with engine.connect() as connection:
         try:
@@ -36,6 +39,35 @@ def add_movie(title, year, rating):
             print(f"Movie '{title}' added successfully.")
         except Exception as e:
             print(f"Error: {e}")
+
+
+def fetch_movie_data(title):
+    """
+    :param title:
+    :return: year, rating and poster-url from the Omdb-API
+    """
+    api_key = "a2c30541"
+    api_url = f"https://www.omdbapi.com/?apikey={api_key}&t={title}"
+
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        movie_data = response.json()
+
+        if movie_data["Response"] != "True":
+            print(f"Movie not found: {movie_data['Error']}")
+            return None
+        else:
+            return {
+                "title": movie_data["Title"],
+                "year": int(movie_data["Year"]),
+                "rating": float(movie_data["imdbRating"]),
+                "poster": movie_data["Poster"]
+            }
+
+    except Exception as e:
+        print(f"Error fetching data: {e}")
+        return None
 
 def delete_movie(title):
     """Delete a movie from the database."""
